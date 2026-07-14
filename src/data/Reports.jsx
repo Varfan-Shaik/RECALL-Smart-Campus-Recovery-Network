@@ -1,0 +1,48 @@
+const reports = [
+  {
+    id: 'RCL-2026-0017',
+    title: 'Black OnePlus Phone',
+    type: 'Lost',
+    category: 'Electronics',
+    color: 'Black',
+    location: 'CSE Block',
+    date: '2026-07-10',
+    status: 'Lost',
+    description: 'Black OnePlus phone lost near the CSE block.',
+  },
+  {
+    id: 'RCL-2026-0018',
+    title: 'College ID Card',
+    type: 'Found',
+    category: 'Documents',
+    color: 'White',
+    location: 'Central Library',
+    date: '2026-07-11',
+    status: 'Found',
+    description: 'Student ID card found near the library entrance.',
+  },
+  {
+    id: 'RCL-2026-0019',
+    title: 'Blue Backpack',
+    type: 'Lost',
+    category: 'Bags',
+    color: 'Blue',
+    location: 'Main Canteen',
+    date: '2026-07-12',
+    status: 'Returned',
+    description: 'Blue backpack containing notebooks and stationery.',
+  },
+  {
+    id: 'RCL-2026-0020',
+    title: 'Wireless Earbuds',
+    type: 'Found',
+    category: 'Electronics',
+    color: 'White',
+    location: 'Seminar Hall',
+    date: '2026-07-13',
+    status: 'Found',
+    description: 'Wireless earbuds found after the afternoon session.',
+  },
+]
+
+export default reports

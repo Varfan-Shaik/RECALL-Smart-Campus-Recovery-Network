@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "title": "Verify hidden item details",
+    "description": "Ask claimants to identify details that were not publicly displayed in the recovery report."
+  },
+  {
+    "id": 2,
+    "title": "Use a safe return point",
+    "description": "Complete item returns at visible campus locations or official department areas."
+  },
+  {
+    "id": 3,
+    "title": "Keep uncertain claims open",
+    "description": "Do not transfer an item when ownership signals remain inconsistent."
+  }
+]
