@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
+import { addActivity } from '../utils/activityStorage'
 
 function Login() {
   const [form, setForm] = useState({
@@ -62,6 +63,10 @@ function Login() {
         localStorage.setItem(
           'recallCurrentUser',
           JSON.stringify(matchedUser),
+        )
+        addActivity(
+          'Login',
+          `${matchedUser.fullName} logged into RECALL.`,
         )
 
         setLoginResult({

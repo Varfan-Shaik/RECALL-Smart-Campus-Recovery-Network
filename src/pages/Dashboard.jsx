@@ -4,11 +4,13 @@ import Button from '../components/Button'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 import { getReports } from '../utils/reportStorage'
+import { getActivities } from '../utils/activityStorage'
 
 function Dashboard() {
   const navigate = useNavigate()
 
   const [reports] = useState(getReports)
+  const [activities] = useState(getActivities)
   const [guidance, setGuidance] = useState([])
   const [apiLoading, setApiLoading] = useState(true)
   const [apiError, setApiError] = useState('')
@@ -30,7 +32,7 @@ function Dashboard() {
 
         const data = await response.json()
         setGuidance(data)
-      } catch (error) {
+      } catch {
         setApiError(
           'Recovery guidance is temporarily unavailable.',
         )
@@ -78,21 +80,21 @@ function Dashboard() {
         <StatCard
           label="Total Reports"
           value={reports.length}
-          icon="◎"
+          icon="R"
           trend="Campus records"
         />
 
         <StatCard
           label="Lost Items"
           value={lostCount}
-          icon="?"
+          icon="L"
           trend="Active cases"
         />
 
         <StatCard
           label="Found Items"
           value={foundCount}
-          icon="⌖"
+          icon="F"
           trend="Awaiting claims"
         />
 
@@ -121,7 +123,9 @@ function Dashboard() {
           <div className="campus-condition-grid">
             {guidance.map((item) => (
               <div key={item.id}>
-                <span>GUIDANCE {String(item.id).padStart(2, '0')}</span>
+                <span>
+                  GUIDANCE {String(item.id).padStart(2, '0')}
+                </span>
                 <strong>{item.title}</strong>
                 <p>{item.description}</p>
               </div>
@@ -185,6 +189,37 @@ function Dashboard() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="dashboard-panel activity-panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">NETWORK HISTORY</p>
+            <h2>Recent activity</h2>
+          </div>
+        </div>
+
+        {activities.length === 0 ? (
+          <div className="empty-state">
+            <h2>No recent activity.</h2>
+            <p>RECALL actions will appear here.</p>
+          </div>
+        ) : (
+          <div className="activity-list">
+            {activities.map((activity) => (
+              <div className="activity-row" key={activity.id}>
+                <span className="activity-type">
+                  {activity.type}
+                </span>
+
+                <div>
+                  <strong>{activity.message}</strong>
+                  <p>{activity.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

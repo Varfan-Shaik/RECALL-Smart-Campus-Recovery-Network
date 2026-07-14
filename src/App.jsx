@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard'
 import ReportItem from './pages/ReportItem'
 import Reports from './pages/Reports'
 import ItemDetails from './pages/ItemDetails'
+import EditReport from './pages/EditReport'
 import SmartMatches from './pages/SmartMatches'
 import ClaimVerification from './pages/ClaimVerification'
 import HotspotInsights from './pages/HotspotInsights'
@@ -29,7 +30,8 @@ function App() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/safety" element={<Safety />} />
         <Route path="/items/:id" element={<ItemDetails />} />
-        <Route path="/claim/:id" element={<ProtectedRoute><ClaimVerification /></ProtectedRoute>}/>
+        <Route path="/items/:id/edit" element={<ProtectedRoute><EditReport /></ProtectedRoute>}/>
+        <Route path="/claim/:id" element={<ProtectedRoute><ClaimVerification /></ProtectedRoute>} />
       </Route>
       <Route
         path="/dashboard"

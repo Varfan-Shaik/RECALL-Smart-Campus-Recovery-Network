@@ -1,42 +1,27 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
-import { addActivity } from '../utils/activityStorage'
 import {
-  generateRecoveryId,
   getReports,
-  saveReports,
+  updateReport,
 } from '../utils/reportStorage'
 
-const initialForm = {
-  title: '',
-  type: 'Lost',
-  category: '',
-  color: '',
-  location: '',
-  date: '',
-  description: '',
-}
-
-function ReportItem() {
-  const [form, setForm] = useState(() => {
-    const savedDraft = localStorage.getItem('recallReportDraft')
-
-    return savedDraft
-      ? JSON.parse(savedDraft)
-      : initialForm
-  })
-
-  const [errors, setErrors] = useState({})
-  const [success, setSuccess] = useState('')
+function EditReport() {
+  const { id } = useParams()
   const navigate = useNavigate()
 
+  const [form, setForm] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [success, setSuccess] = useState('')
+
   useEffect(() => {
-    localStorage.setItem(
-      'recallReportDraft',
-      JSON.stringify(form),
+    const reports = getReports()
+    const selectedReport = reports.find(
+      (report) => report.id === id,
     )
-  }, [form])
+
+    setForm(selectedReport || null)
+  }, [id])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -76,50 +61,44 @@ function ReportItem() {
 
     if (Object.keys(nextErrors).length > 0) return
 
-    const reports = getReports()
-    const recoveryId = generateRecoveryId(reports)
-
-    const newReport = {
-      id: recoveryId,
+    updateReport({
       ...form,
       status: form.type,
-    }
-
-    saveReports([newReport, ...reports])
-
-    addActivity(
-      'Added',
-      `${newReport.title} recovery case was created.`,
-    )
-
-    localStorage.removeItem('recallReportDraft')
+    })
 
     setSuccess(
-      `Recovery case ${recoveryId} created successfully.`,
+      `Recovery case ${form.id} updated successfully.`,
     )
 
-    setForm(initialForm)
-
     setTimeout(() => {
-      navigate('/reports')
-    }, 1500)
+      navigate(`/items/${form.id}`)
+    }, 1200)
   }
 
-  const handleClearDraft = () => {
-    localStorage.removeItem('recallReportDraft')
-    setForm(initialForm)
-    setErrors({})
+  if (!form) {
+    return (
+      <section className="report-page">
+        <div className="empty-state">
+          <span>404</span>
+          <h2>Recovery case not found.</h2>
+
+          <Button onClick={() => navigate('/reports')}>
+            Return to Reports
+          </Button>
+        </div>
+      </section>
+    )
   }
 
   return (
     <section className="report-page">
       <div className="report-heading">
-        <p className="eyebrow">NEW RECOVERY SIGNAL</p>
-        <h1>Report an item.</h1>
+        <p className="eyebrow">UPDATE RECOVERY SIGNAL</p>
+        <h1>Edit recovery case.</h1>
 
         <p>
-          Submit accurate information to help RECALL identify possible
-          matches across the campus recovery network.
+          Update case information and preserve the latest recovery
+          details across the RECALL network.
         </p>
       </div>
 
@@ -127,10 +106,6 @@ function ReportItem() {
         {success && (
           <div className="success-message">{success}</div>
         )}
-
-        <div className="draft-status">
-          Draft automatically saved on this device.
-        </div>
 
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
@@ -183,7 +158,7 @@ function ReportItem() {
             <ReportField
               label="Color"
               name="color"
-              value={form.color}
+              value={form.color || ''}
               onChange={handleChange}
             />
 
@@ -213,7 +188,6 @@ function ReportItem() {
               value={form.description}
               onChange={handleChange}
               rows="5"
-              placeholder="Describe identifying details, where the item was last seen or how it was found..."
             />
 
             {errors.description && (
@@ -224,20 +198,11 @@ function ReportItem() {
           </div>
 
           <div className="form-actions">
-            <Button type="submit">Create Recovery Case</Button>
+            <Button type="submit">Save Changes</Button>
 
             <Button
-              type="button"
               variant="secondary"
-              onClick={handleClearDraft}
-            >
-              Clear Draft
-            </Button>
-
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(`/items/${form.id}`)}
             >
               Cancel
             </Button>
@@ -274,4 +239,4 @@ function ReportField({
   )
 }
 
-export default ReportItem
+export default EditReport

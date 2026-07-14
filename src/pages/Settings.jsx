@@ -9,6 +9,7 @@ function Settings() {
     recoveryUpdates: savedSettings.recoveryUpdates ?? true,
     campusVisibility: savedSettings.campusVisibility ?? true,
     matchSensitivity: savedSettings.matchSensitivity || 'Balanced',
+    theme: savedSettings.theme || 'Dark',
   })
 
   const [saved, setSaved] = useState(false)
@@ -27,6 +28,22 @@ function Settings() {
       ...previous,
       matchSensitivity: event.target.value,
     }))
+
+    setSaved(false)
+  }
+
+  const handleTheme = (event) => {
+    const theme = event.target.value
+
+    setSettings((previous) => ({
+      ...previous,
+      theme,
+    }))
+
+    document.documentElement.setAttribute(
+      'data-theme',
+      theme.toLowerCase(),
+    )
 
     setSaved(false)
   }
@@ -98,6 +115,22 @@ function Settings() {
             active={settings.campusVisibility}
             onClick={() => handleToggle('campusVisibility')}
           />
+
+          <div className="settings-field">
+            <label>Interface Theme</label>
+
+            <select
+              value={settings.theme}
+              onChange={handleTheme}
+            >
+              <option>Dark</option>
+              <option>Light</option>
+            </select>
+
+            <p>
+              Choose the visual theme used across the RECALL network.
+            </p>
+          </div>
         </article>
       </div>
 

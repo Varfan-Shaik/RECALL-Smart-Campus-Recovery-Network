@@ -1,4 +1,5 @@
 import defaultReports from '../data/reports'
+import { addActivity } from './activityStorage'
 
 export function getReports() {
   const savedReports = localStorage.getItem('recallReports')
@@ -27,4 +28,76 @@ export function generateRecoveryId(reports) {
   }, 0)
 
   return `RCL-2026-${String(highestNumber + 1).padStart(4, '0')}`
+}
+
+export function updateReport(updatedReport) {
+  const reports = getReports()
+
+  const updatedReports = reports.map((report) =>
+    report.id === updatedReport.id ? updatedReport : report,
+  )
+
+  saveReports(updatedReports)
+
+  addActivity(
+    'Edited',
+    `${updatedReport.title} recovery case was updated.`,
+  )
+
+  return updatedReports
+}
+
+export function deleteReport(reportId) {
+  const reports = getReports()
+
+  const deletedReport = reports.find(
+    (report) => report.id === reportId,
+  )
+
+  if (deletedReport) {
+    localStorage.setItem(
+      'recallLastDeletedReport',
+      JSON.stringify(deletedReport),
+    )
+
+    addActivity(
+      'Deleted',
+      `${deletedReport.title} recovery case was deleted.`,
+    )
+  }
+
+  const updatedReports = reports.filter(
+    (report) => report.id !== reportId,
+  )
+
+  saveReports(updatedReports)
+
+  return updatedReports
+}
+
+export function undoDeleteReport() {
+  const deletedReport = JSON.parse(
+    localStorage.getItem('recallLastDeletedReport'),
+  )
+
+  if (!deletedReport) return null
+
+  const reports = getReports()
+
+  const alreadyExists = reports.some(
+    (report) => report.id === deletedReport.id,
+  )
+
+  if (!alreadyExists) {
+    saveReports([deletedReport, ...reports])
+
+    addActivity(
+      'Restored',
+      `${deletedReport.title} recovery case was restored.`,
+    )
+  }
+
+  localStorage.removeItem('recallLastDeletedReport')
+
+  return deletedReport
 }

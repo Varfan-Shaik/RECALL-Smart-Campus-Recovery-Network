@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
 import StatusBadge from '../components/StatusBadge'
-import { getReports } from '../utils/reportStorage'
-
+import { deleteReport, getReports, } from '../utils/reportStorage'
 function ItemDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -30,7 +29,16 @@ function ItemDetails() {
       )
     }
   }, [id])
+  const handleDelete = () => {
+    const confirmed = window.confirm(
+      `Delete recovery case ${report.id}? This action cannot be undone.`,
+    )
 
+    if (!confirmed) return
+
+    deleteReport(report.id)
+    navigate('/reports')
+  }
   if (!report) {
     return (
       <section className="details-page">
@@ -62,7 +70,23 @@ function ItemDetails() {
           <h1>{report.title}</h1>
         </div>
 
-        <StatusBadge status={report.status} />
+        <div className="details-header-actions">
+          <StatusBadge status={report.status} />
+
+          <Button
+            variant="secondary"
+            onClick={() => navigate(`/items/${report.id}/edit`)}
+          >
+            Edit Report
+          </Button>
+
+          <button
+            className="delete-report-button"
+            onClick={handleDelete}
+          >
+            Delete Report
+          </button>
+        </div>
       </div>
 
       <div className="details-grid">
