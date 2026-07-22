@@ -1,12 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import api from '../services/api'
 import ItemCard from '../components/ItemCard'
-import {
-  getReports,
-  undoDeleteReport,
-} from '../utils/reportStorage'
+import { undoDeleteReport } from '../utils/reportStorage'
 
 function Reports() {
-  const [reports, setReports] = useState(getReports)
+  const [reports, setReports] = useState([])
   const [restoredMessage, setRestoredMessage] = useState('')
 
   const [search, setSearch] = useState(
@@ -16,6 +14,19 @@ function Reports() {
   const [statusFilter, setStatusFilter] = useState(
     () => sessionStorage.getItem('recallStatusFilter') || 'All',
   )
+  
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get('/reports')
+        setReports(response.data)
+      } catch (error) {
+        console.error('Failed to fetch reports:', error)
+      }
+    }
+
+    fetchReports()
+  }, [])
 
   const [sortOrder, setSortOrder] = useState(
     () => sessionStorage.getItem('recallSortOrder') || 'Newest',
@@ -44,7 +55,7 @@ function Reports() {
       return new Date(second.date) - new Date(first.date)
     })
 
-  const handleUndoDelete = () => {
+  /* const handleUndoDelete = () => {
     const restoredReport = undoDeleteReport()
 
     if (!restoredReport) {
@@ -57,7 +68,7 @@ function Reports() {
     setRestoredMessage(
       `${restoredReport.title} restored successfully.`,
     )
-  }
+  } */
 
   return (
     <section className="reports-page">
@@ -107,12 +118,12 @@ function Reports() {
           <option>Name</option>
         </select>
 
-        <button
+        {/* <button
           className="undo-delete-button"
           onClick={handleUndoDelete}
         >
           Restore Last Deleted
-        </button>
+        </button> */}
       </div>
 
       {restoredMessage && (
