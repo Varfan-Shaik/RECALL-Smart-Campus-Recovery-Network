@@ -2,11 +2,28 @@ import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
-import { getReports } from '../utils/reportStorage'
+import { useEffect, useState } from 'react'
+import api from '../services/api'
 
 function Home() {
   const navigate = useNavigate()
-  const reports = getReports()
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get('/reports')
+        setReports(response.data)
+      } catch (error) {
+        console.error('Failed to fetch reports:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReports()
+  }, [])
 
   const lostCount = reports.filter(
     (report) => report.status === 'Lost',
@@ -26,6 +43,16 @@ function Home() {
         new Date(second.date) - new Date(first.date),
     )
     .slice(0, 3)
+
+  if (loading) {
+    return (
+      <section>
+        <div className="empty-state">
+          <h2>Loading home...</h2>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <>
@@ -149,9 +176,9 @@ function Home() {
 
         <div className="case-list">
           {recentCases.map((item) => (
-            <article className="case-row" key={item.id}>
+            <article className="case-row" key={item._id}>
               <div>
-                <span className="case-id">{item.id}</span>
+                <span className="case-id">{item._id}</span>
                 <h3>{item.title}</h3>
                 <p>{item.location}</p>
               </div>

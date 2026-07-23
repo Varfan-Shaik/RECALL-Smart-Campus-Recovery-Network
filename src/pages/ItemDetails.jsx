@@ -2,43 +2,72 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
 import StatusBadge from '../components/StatusBadge'
-import { deleteReport, getReports, } from '../utils/reportStorage'
+import api from '../services/api'
+
 function ItemDetails() {
   const { id } = useParams()
   const navigate = useNavigate()
+
   const [report, setReport] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const reports = getReports()
-    const selectedReport = reports.find((item) => item.id === id)
+    const fetchReport = async () => {
+      try {
+        const response = await api.get(`/reports/${id}`)
 
-    setReport(selectedReport || null)
+        setReport(response.data)
 
-    if (selectedReport) {
-      const recentlyViewed =
-        JSON.parse(localStorage.getItem('recallRecentlyViewed')) || []
+        const recentlyViewed =
+          JSON.parse(localStorage.getItem('recallRecentlyViewed')) || []
 
-      const updatedRecentlyViewed = [
-        selectedReport,
-        ...recentlyViewed.filter((item) => item.id !== selectedReport.id),
-      ].slice(0, 5)
+        const updatedRecentlyViewed = [
+          response.data,
+          ...recentlyViewed.filter(
+            (item) => item._id !== response.data._id,
+          ),
+        ].slice(0, 5)
 
-      localStorage.setItem(
-        'recallRecentlyViewed',
-        JSON.stringify(updatedRecentlyViewed),
-      )
+        localStorage.setItem(
+          'recallRecentlyViewed',
+          JSON.stringify(updatedRecentlyViewed),
+        )
+      } catch (error) {
+        console.error('Failed to fetch report:', error)
+        setReport(null)
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchReport()
   }, [id])
-  const handleDelete = () => {
+
+  const handleDelete = async () => {
     const confirmed = window.confirm(
-      `Delete recovery case ${report.id}? This action cannot be undone.`,
+      'Delete this recovery case? This action cannot be undone.',
     )
 
     if (!confirmed) return
 
-    deleteReport(report.id)
-    navigate('/reports')
+    try {
+      await api.delete(`/reports/${report._id}`)
+      navigate('/reports')
+    } catch (error) {
+      console.error('Failed to delete report:', error)
+    }
   }
+
+  if (loading) {
+    return (
+      <section className="details-page">
+        <div className="empty-state">
+          <h2>Loading recovery case...</h2>
+        </div>
+      </section>
+    )
+  }
+
   if (!report) {
     return (
       <section className="details-page">
@@ -46,6 +75,7 @@ function ItemDetails() {
           <span>404</span>
           <h2>Recovery case not found.</h2>
           <p>The requested Recovery ID does not exist.</p>
+
           <Button onClick={() => navigate('/reports')}>
             Return to Reports
           </Button>
@@ -66,7 +96,11 @@ function ItemDetails() {
       <div className="details-header">
         <div>
           <p className="eyebrow">RECOVERY CASE</p>
-          <span className="details-id">{report.id}</span>
+
+          <span className="details-id">
+            {report.recoveryId || report._id}
+          </span>
+
           <h1>{report.title}</h1>
         </div>
 
@@ -75,7 +109,9 @@ function ItemDetails() {
 
           <Button
             variant="secondary"
-            onClick={() => navigate(`/items/${report.id}/edit`)}
+            onClick={() =>
+              navigate(`/items/${report._id}/edit`)
+            }
           >
             Edit Report
           </Button>
@@ -91,21 +127,51 @@ function ItemDetails() {
 
       <div className="details-grid">
         <article className="details-card main-details-card">
-          <p className="card-label">CASE DESCRIPTION</p>
-          <p className="case-description">{report.description}</p>
+          <p className="card-label">
+            CASE DESCRIPTION
+          </p>
+
+          <p className="case-description">
+            {report.description}
+          </p>
 
           <div className="details-information">
-            <Detail label="Report Type" value={report.type} />
-            <Detail label="Category" value={report.category} />
-            <Detail label="Color" value={report.color || 'Not specified'} />
-            <Detail label="Campus Location" value={report.location} />
-            <Detail label="Report Date" value={report.date} />
-            <Detail label="Recovery ID" value={report.id} />
+            <Detail
+              label="Report Type"
+              value={report.type}
+            />
+
+            <Detail
+              label="Category"
+              value={report.category}
+            />
+
+            <Detail
+              label="Color"
+              value={report.color || 'Not specified'}
+            />
+
+            <Detail
+              label="Campus Location"
+              value={report.location}
+            />
+
+            <Detail
+              label="Report Date"
+              value={report.date}
+            />
+
+            <Detail
+              label="Recovery ID"
+              value={report.recoveryId || report._id}
+            />
           </div>
         </article>
 
         <article className="details-card timeline-card">
-          <p className="card-label">RECOVERY TIMELINE</p>
+          <p className="card-label">
+            RECOVERY TIMELINE
+          </p>
 
           <div className="recovery-timeline">
             <TimelineStep
@@ -133,7 +199,11 @@ function ItemDetails() {
             />
           </div>
 
-          <Button onClick={() => navigate('/dashboard/matches')}>
+          <Button
+            onClick={() =>
+              navigate('/dashboard/matches')
+            }
+          >
             Find Possible Matches
           </Button>
         </article>
@@ -153,7 +223,10 @@ function Detail({ label, value }) {
 
 function TimelineStep({ title, text, active }) {
   return (
-    <div className={`timeline-step ${active ? 'active' : ''}`}>
+    <div
+      className={`timeline-step ${active ? 'active' : ''
+        }`}
+    >
       <span className="timeline-dot"></span>
 
       <div>

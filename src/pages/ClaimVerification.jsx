@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Button from '../components/Button'
-import { getReports } from '../utils/reportStorage'
+import api from '../services/api'
 
 function ClaimVerification() {
   const { id } = useParams()
@@ -9,10 +9,31 @@ function ClaimVerification() {
   const lostId = searchParams.get('lost')
   const navigate = useNavigate()
 
-  const reports = getReports()
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const foundItem = reports.find((report) => report.id === id)
-  const lostItem = reports.find((report) => report.id === lostId)
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get('/reports')
+        setReports(response.data)
+      } catch (error) {
+        console.error('Failed to fetch reports:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReports()
+  }, [])
+
+  const foundItem = reports.find(
+    (report) => report._id === id,
+  )
+
+  const lostItem = reports.find(
+    (report) => report._id === lostId,
+  )
 
   const [form, setForm] = useState({
     identifyingDetail: '',
@@ -24,6 +45,16 @@ function ClaimVerification() {
   const [errors, setErrors] = useState({})
   const [result, setResult] = useState(null)
   const [verifying, setVerifying] = useState(false)
+
+  if (loading) {
+    return (
+      <section className="claim-page">
+        <div className="empty-state">
+          <h2>Loading verification case...</h2>
+        </div>
+      </section>
+    )
+  }
 
   if (!foundItem || !lostItem) {
     return (
@@ -109,8 +140,8 @@ function ClaimVerification() {
 
       const verification = {
         id: `CLM-${Date.now()}`,
-        foundItemId: foundItem.id,
-        lostItemId: lostItem.id,
+        foundItemId: foundItem._id,
+        lostItemId: lostItem._id,
         verificationScore,
         status:
           verificationScore >= 50
@@ -162,15 +193,18 @@ function ClaimVerification() {
           <p className="card-label">MATCH UNDER REVIEW</p>
 
           <div className="claim-item">
-            <span>LOST CASE · {lostItem.id}</span>
-            <h2>{lostItem.title}</h2>
+            <span>
+              LOST CASE · {lostItem.recoveryId || lostItem._id}
+            </span>            <h2>{lostItem.title}</h2>
             <p>{lostItem.location}</p>
           </div>
 
           <div className="claim-link">↓</div>
 
           <div className="claim-item">
-            <span>FOUND CASE · {foundItem.id}</span>
+            <span>
+              FOUND CASE · {foundItem.recoveryId || foundItem._id}
+            </span>
             <h2>{foundItem.title}</h2>
             <p>{foundItem.location}</p>
           </div>

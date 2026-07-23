@@ -1,8 +1,10 @@
 import Report from "../models/reportModel.js";
+import { generateCaseId } from "../utils/generateCaseId.js";
 
 export const getReports = async (req, res) => {
   try {
     const reports = await Report.find();
+
     res.json(reports);
   } catch (error) {
     res.status(500).json({
@@ -31,14 +33,21 @@ export const getReport = async (req, res) => {
 
 export const addReport = async (req, res) => {
   try {
-    const report = await Report.create(req.body);
+    const recoveryId = await generateCaseId();
+
+    const report = await Report.create({
+      ...req.body,
+      recoveryId,
+    });
+    
+    console.log(report);
 
     res.status(201).json({
       message: "Report created successfully",
       report,
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(400).json({
       message: error.message,
     });
   }
@@ -50,7 +59,7 @@ export const editReport = async (req, res) => {
       req.params.id,
       req.body,
       {
-        returnDocument: 'after'
+        returnDocument: "after",
       }
     );
 

@@ -1331,7 +1331,8 @@ a {
 }
 
 .match-filter option {
-  color: #111827;
+  background: #0a1713;
+  color: #d1fae5;
 }
 
 .engine-status {

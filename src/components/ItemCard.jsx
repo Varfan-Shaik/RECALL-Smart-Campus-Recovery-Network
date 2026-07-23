@@ -10,14 +10,14 @@ function ItemCard({ report, onFavoriteChange }) {
   const navigate = useNavigate()
 
   const [favorite, setFavorite] = useState(() =>
-    isFavorite(report.id),
+    isFavorite(report._id),
   )
 
   const handleFavorite = () => {
     const updatedFavorites = toggleFavorite(report)
 
     setFavorite(
-      updatedFavorites.some((item) => item.id === report.id),
+      updatedFavorites.some((item) => item._id === report._id),
     )
 
     if (onFavoriteChange) {
@@ -28,9 +28,9 @@ function ItemCard({ report, onFavoriteChange }) {
   return (
     <article className="item-card">
       <div className="item-card-top">
-        <span className="case-id">{report.id}</span>
-
-        <div className="item-card-status">
+        <span className="case-id">
+          {report.recoveryId || report._id}
+        </span>        <div className="item-card-status">
           <button
             className={`favorite-button ${favorite ? 'active' : ''}`}
             onClick={handleFavorite}
@@ -56,7 +56,7 @@ function ItemCard({ report, onFavoriteChange }) {
 
       <button
         className="item-view-button"
-        onClick={() => navigate(`/items/${report.id}`)}
+        onClick={() => navigate(`/items/${report._id}`)}
       >
         View Recovery Case →
       </button>

@@ -115,7 +115,7 @@ export function generateSmartMatches(reports) {
 
       if (result.score >= 30) {
         matches.push({
-          id: `${lostItem.id}-${foundItem.id}`,
+          id: `${lostItem._id}-${foundItem._id}`,
           lostItem,
           foundItem,
           score: result.score,

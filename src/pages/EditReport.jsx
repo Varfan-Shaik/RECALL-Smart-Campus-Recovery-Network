@@ -1,26 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
-import {
-  getReports,
-  updateReport,
-} from '../utils/reportStorage'
+import api from '../services/api'
 
 function EditReport() {
   const { id } = useParams()
   const navigate = useNavigate()
 
   const [form, setForm] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [errors, setErrors] = useState({})
   const [success, setSuccess] = useState('')
 
   useEffect(() => {
-    const reports = getReports()
-    const selectedReport = reports.find(
-      (report) => report.id === id,
-    )
+    const fetchReport = async () => {
+      try {
+        const response = await api.get(`/reports/${id}`)
+        setForm(response.data)
+      } catch (error) {
+        console.error('Failed to fetch report:', error)
+        setForm(null)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    setForm(selectedReport || null)
+    fetchReport()
   }, [id])
 
   const handleChange = (event) => {
@@ -32,7 +37,7 @@ function EditReport() {
     }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     const nextErrors = {}
@@ -61,18 +66,29 @@ function EditReport() {
 
     if (Object.keys(nextErrors).length > 0) return
 
-    updateReport({
-      ...form,
-      status: form.type,
-    })
+    try {
+      await api.put(`/reports/${form._id}`, {
+        ...form,
+        status: form.type,
+      })
 
-    setSuccess(
-      `Recovery case ${form.id} updated successfully.`,
+      setSuccess('Recovery case updated successfully.')
+
+      navigate(`/items/${form._id}`)
+    } catch (error) {
+      console.error('Failed to update report:', error)
+      alert('Failed to update report.')
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className="report-page">
+        <div className="empty-state">
+          <h2>Loading recovery case...</h2>
+        </div>
+      </section>
     )
-
-    setTimeout(() => {
-      navigate(`/items/${form.id}`)
-    }, 1200)
   }
 
   if (!form) {
@@ -80,6 +96,7 @@ function EditReport() {
       <section className="report-page">
         <div className="empty-state">
           <span>404</span>
+
           <h2>Recovery case not found.</h2>
 
           <Button onClick={() => navigate('/reports')}>
@@ -94,6 +111,7 @@ function EditReport() {
     <section className="report-page">
       <div className="report-heading">
         <p className="eyebrow">UPDATE RECOVERY SIGNAL</p>
+
         <h1>Edit recovery case.</h1>
 
         <p>
@@ -104,7 +122,9 @@ function EditReport() {
 
       <div className="report-form-card">
         {success && (
-          <div className="success-message">{success}</div>
+          <div className="success-message">
+            {success}
+          </div>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -198,11 +218,14 @@ function EditReport() {
           </div>
 
           <div className="form-actions">
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit">
+              Save Changes
+            </Button>
 
             <Button
+              type="button"
               variant="secondary"
-              onClick={() => navigate(`/items/${form.id}`)}
+              onClick={() => navigate(`/items/${form._id}`)}
             >
               Cancel
             </Button>
@@ -233,7 +256,9 @@ function ReportField({
       />
 
       {error && (
-        <span className="field-error">{error}</span>
+        <span className="field-error">
+          {error}
+        </span>
       )}
     </div>
   )

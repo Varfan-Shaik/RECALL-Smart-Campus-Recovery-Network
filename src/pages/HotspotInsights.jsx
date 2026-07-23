@@ -1,11 +1,27 @@
-import { useState } from 'react'
-import { getReports } from '../utils/reportStorage'
+import { useEffect, useState } from 'react'
+import api from '../services/api'
 import { generateHotspotInsights } from '../utils/hotspotEngine'
 
 function HotspotInsights() {
   const [view, setView] = useState('All')
 
-  const reports = getReports()
+  const [reports, setReports] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get('/reports')
+        setReports(response.data)
+      } catch (error) {
+        console.error('Failed to fetch reports:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReports()
+  }, [])
   const hotspots = generateHotspotInsights(reports)
 
   const visibleHotspots = hotspots.filter((hotspot) => {
@@ -26,16 +42,27 @@ function HotspotInsights() {
   )
   const highestCount = hotspots[0]?.total || 0
 
-const highestLocations = hotspots.filter(
-  (hotspot) => hotspot.total === highestCount,
-)
+  const highestLocations = hotspots.filter(
+    (hotspot) => hotspot.total === highestCount,
+  )
 
-const highestActivity =
-  highestLocations.length > 1
-    ? 'Multiple Locations'
-    : highestLocations[0]?.location || 'No data'
+  const highestActivity =
+    highestLocations.length > 1
+      ? 'Multiple Locations'
+      : highestLocations[0]?.location || 'No data'
+
+  if (loading) {
+    return (
+      <section>
+        <div className="empty-state">
+          <h2>Loading hotspot insights...</h2>
+        </div>
+      </section>
+    )
+  }
 
   return (
+
     <section>
       <div className="dashboard-heading hotspot-heading">
         <div>

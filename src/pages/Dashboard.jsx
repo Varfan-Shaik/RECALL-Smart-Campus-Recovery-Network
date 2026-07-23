@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
-import { getReports } from '../utils/reportStorage'
 import { getActivities } from '../utils/activityStorage'
+import api from '../services/api'
 
 function Dashboard() {
   const navigate = useNavigate()
 
-  const [reports] = useState(getReports)
+  const [reports, setReports] = useState([])
   const [activities] = useState(getActivities)
   const [guidance, setGuidance] = useState([])
   const [apiLoading, setApiLoading] = useState(true)
@@ -17,6 +17,19 @@ function Dashboard() {
 
   const currentUser =
     JSON.parse(localStorage.getItem('recallCurrentUser')) || {}
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await api.get('/reports')
+        setReports(response.data)
+      } catch (error) {
+        console.error('Failed to fetch reports:', error)
+      }
+    }
+
+    fetchReports()
+  }, [])
 
   useEffect(() => {
     const fetchRecoveryGuidance = async () => {
@@ -67,7 +80,8 @@ function Dashboard() {
           </h1>
 
           <p>
-            Monitor campus recovery signals and manage active cases.
+            Monitor campus recovery signals and manage active
+            cases.
           </p>
         </div>
 
@@ -122,7 +136,7 @@ function Dashboard() {
         ) : (
           <div className="campus-condition-grid">
             {guidance.map((item) => (
-              <div key={item.id}>
+              <div key={item._id}>
                 <span>
                   GUIDANCE {String(item.id).padStart(2, '0')}
                 </span>
@@ -164,8 +178,11 @@ function Dashboard() {
 
             <tbody>
               {reports.map((report) => (
-                <tr key={report.id}>
-                  <td className="table-id">{report.id}</td>
+                <tr key={report._id}>
+                  <td className="table-id">
+                    {report.recoveryId || report._id}
+                  </td>
+
                   <td>{report.title}</td>
                   <td>{report.location}</td>
                   <td>{report.date}</td>
@@ -178,7 +195,7 @@ function Dashboard() {
                     <button
                       className="table-view"
                       onClick={() =>
-                        navigate(`/items/${report.id}`)
+                        navigate(`/items/${report._id}`)
                       }
                     >
                       View
@@ -207,7 +224,10 @@ function Dashboard() {
         ) : (
           <div className="activity-list">
             {activities.map((activity) => (
-              <div className="activity-row" key={activity.id}>
+              <div
+                className="activity-row"
+                key={activity.id}
+              >
                 <span className="activity-type">
                   {activity.type}
                 </span>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import ItemCard from '../components/ItemCard'
-import { undoDeleteReport } from '../utils/reportStorage'
 
 function Reports() {
   const [reports, setReports] = useState([])
@@ -14,11 +13,18 @@ function Reports() {
   const [statusFilter, setStatusFilter] = useState(
     () => sessionStorage.getItem('recallStatusFilter') || 'All',
   )
-  
+
+  const [sortOrder, setSortOrder] = useState(
+    () => sessionStorage.getItem('recallSortOrder') || 'Newest',
+  )
+
   useEffect(() => {
     const fetchReports = async () => {
       try {
         const response = await api.get('/reports')
+
+        console.log('API Response:', response.data)
+
         setReports(response.data)
       } catch (error) {
         console.error('Failed to fetch reports:', error)
@@ -28,10 +34,6 @@ function Reports() {
     fetchReports()
   }, [])
 
-  const [sortOrder, setSortOrder] = useState(
-    () => sessionStorage.getItem('recallSortOrder') || 'Newest',
-  )
-
   const filteredReports = reports
     .filter((report) => {
       const searchText = search.toLowerCase()
@@ -39,7 +41,9 @@ function Reports() {
       const matchesSearch =
         report.title.toLowerCase().includes(searchText) ||
         report.location.toLowerCase().includes(searchText) ||
-        report.id.toLowerCase().includes(searchText)
+        (report.recoveryId || report._id)
+          .toLowerCase()
+          .includes(searchText)
 
       const matchesStatus =
         statusFilter === 'All' ||
@@ -52,23 +56,8 @@ function Reports() {
         return first.title.localeCompare(second.title)
       }
 
-      return new Date(second.date) - new Date(first.date)
+      return new Date(second.createdAt) - new Date(first.createdAt)
     })
-
-  /* const handleUndoDelete = () => {
-    const restoredReport = undoDeleteReport()
-
-    if (!restoredReport) {
-      setRestoredMessage('No recently deleted report to restore.')
-      return
-    }
-
-    setReports(getReports())
-
-    setRestoredMessage(
-      `${restoredReport.title} restored successfully.`,
-    )
-  } */
 
   return (
     <section className="reports-page">
@@ -117,13 +106,6 @@ function Reports() {
           <option>Newest</option>
           <option>Name</option>
         </select>
-
-        {/* <button
-          className="undo-delete-button"
-          onClick={handleUndoDelete}
-        >
-          Restore Last Deleted
-        </button> */}
       </div>
 
       {restoredMessage && (
@@ -141,7 +123,10 @@ function Reports() {
       ) : (
         <div className="items-grid">
           {filteredReports.map((report) => (
-            <ItemCard key={report.id} report={report} />
+            <ItemCard
+              key={report._id}
+              report={report}
+            />
           ))}
         </div>
       )}

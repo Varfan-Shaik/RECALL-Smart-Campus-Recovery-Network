@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
+import api from '../services/api'
 import { addActivity } from '../utils/activityStorage'
-import {
-  generateRecoveryId,
-  getReports,
-  saveReports,
-} from '../utils/reportStorage'
 
 const initialForm = {
   title: '',
@@ -47,7 +43,7 @@ function ReportItem() {
     }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     const nextErrors = {}
@@ -76,33 +72,32 @@ function ReportItem() {
 
     if (Object.keys(nextErrors).length > 0) return
 
-    const reports = getReports()
-    const recoveryId = generateRecoveryId(reports)
-
     const newReport = {
-      id: recoveryId,
       ...form,
       status: form.type,
     }
 
-    saveReports([newReport, ...reports])
+    try {
+      const response = await api.post('/reports', newReport)
 
-    addActivity(
-      'Added',
-      `${newReport.title} recovery case was created.`,
-    )
+      addActivity(
+        'Added',
+        `${newReport.title} recovery case was created.`,
+      )
 
-    localStorage.removeItem('recallReportDraft')
+      localStorage.removeItem('recallReportDraft')
 
-    setSuccess(
-      `Recovery case ${recoveryId} created successfully.`,
-    )
+      setSuccess('Recovery case created successfully.')
 
-    setForm(initialForm)
+      setForm(initialForm)
 
-    setTimeout(() => {
-      navigate('/reports')
-    }, 1500)
+      setTimeout(() => {
+        navigate('/reports')
+      }, 1500)
+    } catch (error) {
+      console.error('Failed to create report:', error)
+      alert('Failed to create report. Please try again.')
+    }
   }
 
   const handleClearDraft = () => {
@@ -224,7 +219,9 @@ function ReportItem() {
           </div>
 
           <div className="form-actions">
-            <Button type="submit">Create Recovery Case</Button>
+            <Button type="submit">
+              Create Recovery Case
+            </Button>
 
             <Button
               type="button"
